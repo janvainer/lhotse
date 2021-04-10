@@ -216,11 +216,13 @@ class SupervisionSet(Serializable, Sequence[SupervisionSegment]):
         return (
             # We only modify the offset - the duration remains the same, as we're only shifting the segment
             # relative to the Cut's start, and not truncating anything.
+            # Rounding is used so that Features.end and Supervision.end are comparable.
+            # Features do not use rounding, while Supervisions do.
             segment.with_offset(-start_after) if adjust_offset else segment
             for segment in segment_by_recording_id.get(recording_id, [])
             if (channel is None or segment.channel == channel)
-               and segment.start >= start_after
-               and (end_before is None or segment.end <= end_before)
+               and segment.start >= round(start_after, ndigits=8)
+               and (end_before is None or segment.end <= round(end_before, ndigits=8))
         )
 
     # This is a cache that significantly speeds up repeated ``find()`` queries.
